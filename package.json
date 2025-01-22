@@ -1,0 +1,20 @@
+{
+  "name": "sf-atomic-task-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "demo": "pnpm --filter sf-atomic-task-demo start",
+    "postinstall": "simple-git-hooks"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "simple-git-hooks": {
+    "pre-commit": "pnpm -r run precommit"
+  },
+  "devDependencies": {
+    "esno": "^4.8.0",
+    "simple-git-hooks": "^2.11.1"
+  }
+}

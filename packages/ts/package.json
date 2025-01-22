@@ -1,0 +1,27 @@
+{
+  "name": "sf-atomic-task",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "pnpm run build --watch",
+    "build": "tsup",
+    "check": "pnpm exec biome check --write",
+    "check:ci": "pnpm exec biome check",
+    "test": "vitest",
+    "test:ci": "export CI=1 && vitest",
+    "coverage": "open coverage/index.html",
+    "precommit": "pnpm run check:ci && pnpm run test:ci"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@vitest/coverage-v8": "2.1.8",
+    "tsup": "^8.3.5",
+    "vitest": "^2.1.8"
+  }
+}
