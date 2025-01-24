@@ -47,7 +47,10 @@ func DefineTasks(deps map[string][]string, tasks *map[string]TaskFunc) (runFunc,
     core.Debug(&config, "fields value", fields)
     core.Debug(&config, "paramsMap value", paramsMap)
 
-    core.ParallelRun(fields, &deps, tasks, &config)
+    err = core.ParallelRun(fields, &deps, tasks, &config)
+    if err != nil {
+      return nil, err
+    }
 
     result := make(map[string]any, length)
 

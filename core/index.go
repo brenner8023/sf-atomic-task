@@ -29,6 +29,9 @@ func dealDeps(field string, deps *map[string][]string, tasks *map[string]TaskFun
     return nil, err
   }
 
+  config.Mu.Lock()
+  defer config.Mu.Unlock()
+
   depContext := make(map[string]any, len(currDeps))
   taskChanMap := (*config).TaskChanMap
 
@@ -54,12 +57,7 @@ func doTask(field string, deps *map[string][]string, tasks *map[string]TaskFunc,
     return err
   }
 
-  currTask, ok := (*tasks)[field]
-  if !ok {
-    msg := fmt.Sprintf("task[%s] is not defined", field)
-    return FormatError("doTask", msg)
-  }
-
+  currTask := (*tasks)[field]
   taskData, err := currTask(depContext, *params)
   if err != nil {
     return err
@@ -83,7 +81,8 @@ func ParallelRun(fields []string, deps *map[string][]string, tasks *map[string]T
   if total == 0 {
     return nil
   }
-
+  var taskErr error
+  var taskErrMu sync.Mutex
   var waitGroup sync.WaitGroup
   waitGroup.Add(total)
 
@@ -93,14 +92,19 @@ func ParallelRun(fields []string, deps *map[string][]string, tasks *map[string]T
       currOnce := config.OnceMap[field]
       currOnce.Do(func() {
         Debug(config, fmt.Sprintf("---doTask %s start---", field))
-        doTask(field, deps, tasks, config)
+        err := doTask(field, deps, tasks, config)
+        if err != nil {
+          taskErrMu.Lock()
+          taskErr = err
+          taskErrMu.Unlock()
+        }
         Debug(config, fmt.Sprintf("---doTask %s end---", field))
       })
     }(field)
   }
   waitGroup.Wait()
 
-  return nil
+  return taskErr
 }
 
 func InitConfig(tasks *map[string]TaskFunc) (map[string]bool, map[string]*sync.Once, error) {
