@@ -10,6 +10,7 @@ type TaskFunc func(context map[string]any, params map[string]any) (any, error)
 type TaskConfig struct {
   Params *map[string]any
   TaskChanMap *map[string]chan any
+  Mu *sync.Mutex
   OnceMap map[string]*(sync.Once)
 }
 
@@ -63,6 +64,9 @@ func doTask(field string, deps *map[string][]string, tasks *map[string]TaskFunc,
   if err != nil {
     return err
   }
+
+  config.Mu.Lock()
+  defer config.Mu.Unlock()
 
   _, isChanInit := (*taskChanMap)[field]
   if !isChanInit {

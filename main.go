@@ -1,9 +1,9 @@
-package main
+package Atom
 
 import (
-	"fmt"
-	core "sf-atomic-task/src"
-	"time"
+	"sync"
+
+	core "github.com/brenner8023/sf-atomic-task/core"
 )
 
 type TaskFunc = core.TaskFunc
@@ -37,10 +37,11 @@ func DefineTasks(deps map[string][]string, tasks *map[string]TaskFunc) (runFunc,
 
     length := len(fields)
     taskChanMap := make(map[string]chan any, length)
-
+    var mutex sync.Mutex
     config := core.TaskConfig{
       Params: &paramsMap,
       TaskChanMap: &taskChanMap,
+      Mu: &mutex,
       OnceMap: onceMap,
     }
     core.Debug(&config, "fields value", fields)
@@ -50,46 +51,15 @@ func DefineTasks(deps map[string][]string, tasks *map[string]TaskFunc) (runFunc,
 
     result := make(map[string]any, length)
 
-    for field, taskChan := range taskChanMap {
+    for _, field := range fields {
+      taskChan := taskChanMap[field]
       result[field] = <-taskChan
+    }
+    for _, taskChan := range taskChanMap {
       close(taskChan)
     }
     core.Debug(&config, "finished, result value", result)
     return result, nil
   }
   return run, nil
-}
-
-func main() {
-
-  deps := map[string][]string{
-    "A": {},
-    "B": {"A"},
-    "C": {"A"},
-  }
-  tasks := map[string]TaskFunc{
-    "A": func(depContext map[string]any, params map[string]any) (any, error) {
-      time.Sleep(2 * time.Second)
-      return 8023, nil
-    },
-    "B": func(context map[string]any, params map[string]any) (any, error) {
-      return "B", nil
-    },
-    "C": func(context map[string]any, params map[string]any) (any, error) {
-      return true, nil
-    },
-  }
-  run, err := DefineTasks(deps, &tasks)
-  if err != nil {
-    println(err.Error())
-    return
-  }
-  result, err := run([]string{"A", "B", "C"}, map[string]any{"debug": true})
-  if err != nil {
-    println(err.Error())
-    return
-  }
-  if false {
-    fmt.Printf("result: %v\n", result)
-  }
 }

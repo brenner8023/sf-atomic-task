@@ -2,7 +2,7 @@
 import { defineTasks } from 'sf-atomic-task'
 import type { AtomicTasks } from 'sf-atomic-task'
 import { fetchProductSize } from './api'
-import { retryWrapper } from './retry'
+import { retryTask } from './retry'
 
 // 串行链路：productId -> productSize -> productPrice
 async function serialDemo() {
@@ -64,7 +64,7 @@ async function retryDemo() {
   } as const
   const tasks = {
     productId: () => Promise.resolve('001'),
-    productSize: retryWrapper(fetchProductSize, 3),
+    productSize: retryTask(fetchProductSize, { retryTimes: 3, sleep: 1000 }),
   }
   const { run } = defineTasks(deps, tasks)
 
@@ -150,9 +150,9 @@ async function main() {
   await serialDemo()
   console.log('\n---parallelDemo---')
   await parallelDemo()
-  console.log('\n---retryDemo---')
-  await retryDemo()
-  console.log('\n---hrtimeDemo---')
+  // console.log('\n---retryDemo---')
+  // await retryDemo()
+  // console.log('\n---hrtimeDemo---')
   hrtimeDemo()
 }
 
